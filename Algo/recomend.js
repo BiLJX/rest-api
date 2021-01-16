@@ -21,16 +21,14 @@ class Recomend {
                     //if the songs genre from database matches with usef fav genre and if genre fav score is not equal to -
                     if (songs[i].info.genre.toLowerCase() == genresName) {
                         if (temp[genresName] != 0) {
-                            let check =this.newSong(songs[i])
-                            if(!check){
-                                songs[i].recomend.score = temp[genresName]
-                                this.recomendData_byGenre.push(songs[i])
-                            }
+                            songs[i].recomend.score = temp[genresName]
+                            this.recomendData_byGenre.push(songs[i])
                         }
                     }
                 }
             }
         }
+        
         return this.recomendData_byGenre
     }
 
@@ -53,6 +51,45 @@ class Recomend {
         return this.user_genre
     }
 
+
+    similiarity(){
+        let songs = []
+        let user = {
+
+        }
+        const other = this.getOthersGenre()
+        const user_genre = this.getUserGenre()
+        for(let j = 0; j<user_genre.length; j++){
+            const user_genres =  user_genre[j]
+               for(let userGenre in user_genres){
+                   user[userGenre] = user_genres[userGenre]
+                    //console.log(userGenre, user_genres[userGenre])
+            }
+        }
+       for(let i = 0; i<other.length;i++){
+           let sum = 0;
+           let score = 0
+           let other_genre = other[i].byGenre
+           for(let genre in user){
+               if(other_genre[genre]){
+                   sum +=  (user[genre]-other_genre[genre])
+                   score = 1/(1+sum )
+               }
+           }
+           other[i].score = score
+           let data;
+           
+           Object.values(other[i].liked).forEach(value=>{
+               data = Object.values(value)
+           })
+           for(let i = 0; i<data.length; i++){
+               songs.push(this.findSongs(data[i].title, data[i].id, score))
+           }
+       }
+       return songs
+    }
+
+
     //collects all the song from database
     getSongs() {
         let tempSongs;
@@ -72,25 +109,50 @@ class Recomend {
     newSong(song){
         let temp;
         let hasLiked = []
+        let filtered = []
         Object.values(this.user_data.private.feedback.liked).forEach(value=>{
             temp = value
         })
         Object.values(temp).forEach(value=>{
-            hasLiked.push(value)
+            hasLiked.push(value.title)
         })
-        for(let i = 0; i<hasLiked.length; i++){
-            if(hasLiked[i].title == song.info.title){
-                return true
+        let difference = song.filter(x => !hasLiked.includes(x.info.title));
+        return difference
+    }
+
+    getOthersGenre(uid){
+        let data = []
+        Object.values(this.rawData).forEach(value=>{
+            if(value.private['login credentials'].userId != this.id){
+                data.push(value.private.feedback)
             }
-        }
+        })
+        return data
     }
 
     
+    sortByScore(data){
+        for(let i = 0; i<data.length; i++){
+            for(let j = i+1; j<data.length;j++){
+                if(data[i].score<data[j].score){
+                    let temp = data[i]
+                    data[j] = data[i]
+                    data[i] = data[j]
+                }
+            }
+        }
+        return data
+    }
 
+    findSongs(title, uid, score){
+        this.rawData[uid].public.songs[title].recomend.score += score
+        return this.rawData[uid].public.songs[title]
+    }
 
     recomendations(){
         const by_genre = this.byGenre()
-        let total = by_genre
+        const similiarity = this.similiarity()
+        let total = by_genre.concat(similiarity)
         for(let i = 0; i<total.length; i++){
             for(let j = i+1; j<total.length; j++){
                 if(total[i].recomend.score<total[j].recomend.score){
@@ -100,7 +162,7 @@ class Recomend {
                 }
             }
         }
-        return total
+        return this.newSong(total) 
     }
 }
 
