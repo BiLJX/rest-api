@@ -1,7 +1,9 @@
-import firebase from "firebase"
+
 import Sort from "../Modules/Sort.js"
 const sort = new Sort()
-class Recomend {
+
+class Recomend 
+{
     constructor(data, id) {
         this.id = id
         this.rawData = data
@@ -28,9 +30,11 @@ class Recomend {
                 }
             }
         }
-        
         return this.recomendData_byGenre
     }
+
+
+
 
     //gets what genre like the most
     getUserGenre() {
@@ -51,42 +55,59 @@ class Recomend {
         return this.user_genre
     }
 
+    SimiliaritySongs(){
+        let songs = []
+        let user = {}
+
+    }
 
     similiarity(){
         let songs = []
         let user = {
-
         }
         const other = this.getOthersGenre()
         const user_genre = this.getUserGenre()
+        //converts array to object
         for(let j = 0; j<user_genre.length; j++){
             const user_genres =  user_genre[j]
                for(let userGenre in user_genres){
                    user[userGenre] = user_genres[userGenre]
-                    //console.log(userGenre, user_genres[userGenre])
             }
         }
+        //nearest neighbors
        for(let i = 0; i<other.length;i++){
            let sum = 0;
            let score = 0
            let other_genre = other[i].byGenre
+           //here the calculation starts
            for(let genre in user){
                if(other_genre[genre]){
-                   sum +=  (user[genre]-other_genre[genre])
-                   score = 1/(1+sum )
+                   //manhattan distance formula
+                   sum +=  (user[genre]-other_genre[genre])//(x2-x1) + (y2-y1) +......
+                   score = 1/(1+sum )//to reverse the distance and convert to score
                }
            }
-           other[i].score = score
-           let data;
-           
-           Object.values(other[i].liked).forEach(value=>{
-               data = Object.values(value)
-           })
-           for(let i = 0; i<data.length; i++){
-               songs.push(this.findSongs(data[i].title, data[i].id, score))
+           other[i].score = score //sets score in data for comparing later
+           let data; 
+           //converts object to array and stores in var(data)
+           if(other[i].liked){
+            Object.values(other[i].liked).forEach(value=>{
+                data = Object.values(value)
+            })
+            for(let i = 0; i<data.length; i++){
+                songs.push(this.findSongs(data[i].title, data[i].id, score))//needs title and uid to find songs
+            }
            }
+          
+           //finds and stores songs to [songs arr]
+          
        }
-       return songs
+       return songs //finally returns song
+    }
+
+
+    getOthersSong(){
+
     }
 
 
@@ -130,7 +151,8 @@ class Recomend {
         return data
     }
 
-    
+
+
     sortByScore(data){
         for(let i = 0; i<data.length; i++){
             for(let j = i+1; j<data.length;j++){
@@ -153,6 +175,7 @@ class Recomend {
         const by_genre = this.byGenre()
         const similiarity = this.similiarity()
         let total = by_genre.concat(similiarity)
+      
         for(let i = 0; i<total.length; i++){
             for(let j = i+1; j<total.length; j++){
                 if(total[i].recomend.score<total[j].recomend.score){

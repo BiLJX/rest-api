@@ -1,55 +1,34 @@
 import firebase from "firebase"
+import "@firebase/storage"
 import express from "express"
 import cors from "cors"
 import fire from "./firebase.js"
 import dayFunc from "./Modules/dayFunc.js"
 import Sort from "./Modules/Sort.js"
 import Recomend from "./Algo/recomend.js"
+import bodyParser from "body-parser"
+import fileupload from "express-fileupload"
+import { router as trendingRoute } from './Routes/trending.js';
+import {router as resultRoute} from "./Routes/result.js"
 
 const app = express();
 const sort = new Sort;
-let recomend;
+console.log(firebase.auth().currentUser)
+app.use(fileupload())
 app.use(cors())
-let trendingTracks = []
+app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
+
+
+app.use(bodyParser.json({limit: '100mb'}));
+const db = firebase.database()
+
+let recomend;
 let popularTracks = []
 let data = 0
 
-
-
-
-function Trending(data) {
-	let dateObj = new Date();
-	let month = dateObj.getUTCMonth() + 1; //months from 1-12
-	let day = dateObj.getUTCDate();
-	let year = dateObj.getUTCFullYear();
-	let todayDate = dayFunc(day, month, year)
-	if (data) {
-		let tempData;
-		trendingTracks = []
-		Object.values(data).forEach((value) => {
-			if(value.public.songs){
-				tempData = value.public.songs
-			}
-		})
-		Object.values(tempData).forEach((value) => {
-			if(value.date){
-				let views = value.stats.views
-				let totalDate = value.date.totalDate
-				let diff = todayDate - totalDate;
-				if (diff == 0) {
-					return
-				} else {
-				let rateOfChange = views / diff
-				if (rateOfChange >= 10) {
-					trendingTracks.push(value)
-				}
-			}
-			}
-		})
-	}
-}
-
-
+app.use("/api/home/trending", trendingRoute)
+app.use("/api/home/result", resultRoute)
+	
 function PopularTracks(data) {
 	if (data) {
 		let tempData;
@@ -63,43 +42,16 @@ function PopularTracks(data) {
 	}
 }
 
-function findData(data, s) {
-	let tempData;
-	let TempDataArr = []
-	Object.values(data).forEach(value => {
-		tempData = value.public.songs
-	})
-	Object.values(tempData).forEach(value => {
-		TempDataArr.push(value)
-	})
-	const found = TempDataArr.filter(element => {
-		let title = element.info.title.toLocaleLowerCase().includes(s)
-		let artist = element.info.artist.toLocaleLowerCase().includes(s)
-		let genre = element.info.genre.toLocaleLowerCase().includes(s)
-		let conditions =  title || artist || genre
-		return conditions
-	})
-	return found
-}
-
-
 firebase.database().ref("users").on("value", snapshot => {
 	data = snapshot.val();
-	Trending(data)
 	PopularTracks(data)
-	
-	
 })
 
-app.get("/api/home/trending", (req, res) => {
-	res.send(sort.popular(trendingTracks))
-})
+// app.get("/api/home/trending", (req, res) => {
+// 	res.send(sort.trending(popularTracks))
+// })
 
-app.get("/api/home/result", (req, res) => {
-	const search = req.query.search.toLocaleLowerCase();
-	const result = findData(data, search)
-	res.send(result)
-})
+
 
 app.get("/api/home/popular", (req, res) => {
 	res.send(sort.popular(popularTracks))
@@ -114,11 +66,47 @@ app.get("/api/home/recomended", (req, res) => {
 	//res.send(recomend.byGenre())
 })
 
-
-app.get("/", (req, res) => {
-	
+app.get("/api/u/musics", (req, res) =>{
+	const uid = req.query.uid
+	let musics = []
+	firebase.database().ref("users/" + uid + "/public/songs/").on("value", snapshot =>{
+		if(snapshot.val()){
+			Object.values(snapshot.val()).forEach((value)=>{
+				musics.push(value)
+			})
+		}
+	})
+	res.send(musics)
 })
 
-app.listen(process.env.PORT || 3000, () => console.log("listening at port 4000..."))
+app.get("/api/u/data", (req, res)=>{
+	const uid = req.query.uid
+	let data;
+	firebase.database().ref("users/" + uid ).on("value", (snapshot) => {
+		data = snapshot.val()
+	})
+	res.send(data)
+})
+
+
+app.post("/api/profile/checkname", (req, res) =>
+{
+	const name = req.body.name
+})
+
+
+app.post("/api/profile/update", (req, res)=>
+{
+	const body = req.body.update
+	const image = body.temp.image
+	const data = req.body.update.data
+	console.log(body)
+	db.ref("users/"+body.temp.userId+"/public/profile").update(data)
+})
+
+
+
+
+app.listen(4000, () => console.log("listening at port 4000..."))
 
 
