@@ -57,6 +57,6 @@ app.post("/api/profile/update", (req, res)=>
 	db.ref("users/"+body.temp.userId+"/public/profile").update(data)
 })
 
-app.listen(4000, () => console.log("listening at port 4000..."))
+app.listen(process.env.PORT||4000, () => console.log("listening at port 4000..."))
 
 
