@@ -19,7 +19,7 @@ console.log(firebase.auth().currentUser)
 app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
-app.use('/*', express.static(path.join('build')))
+app.use(express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
 const db = firebase.database()
 
@@ -28,12 +28,17 @@ let data = 0
 
 
 //routes
+app.get("/*", (req, res)=>{
+	res.sendFile(path.resolve('build', 'index.html'))
+})
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
 app.use("/api/home/popular", popularRoute)
 app.use("/api/home/recomended", recomendRoute)
 app.use("/api/u/musics", userMusicsRoute)
 app.use("/api/music/like", likeRoute)
+
+
 app.get("/api/u/data", (req, res)=>{
 	const uid = req.query.uid
 	let data;
@@ -57,6 +62,6 @@ app.post("/api/profile/update", (req, res)=>
 	db.ref("users/"+body.temp.userId+"/public/profile").update(data)
 })
 
-app.listen(process.env.PORT||4000, () => console.log("listening at port 4000..."))
+app.listen(process.env.PORT 4000, () => console.log("listening at port 4000..."))
 
 
