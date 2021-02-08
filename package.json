@@ -1,9 +1,5 @@
 {
   "type": "module",
-  "version": "0.1.0",
-  "scripts": {
-    "start": "node server.js"
-  },
   "dependencies": {
     "@tensorflow/tfjs-node": "^2.8.4",
     "body-parser": "^1.19.0",
