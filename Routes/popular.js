@@ -11,14 +11,19 @@ function PopularTracks(data) {
 		let tempData;
 		popularTracks = []
 		Object.values(data).forEach((value) => {
-			tempData = value.public.songs
+			if(value.public.songs){
+				tempData = value.public.songs
+			}
 		})
+		console.log(tempData)
 		Object.values(tempData).forEach((value) => {
 			popularTracks.push(value)
         })
+		console.log(popularTracks)
         return popularTracks
 	}
 }
+
 
 let data;
 firebase.database().ref("users").on("value", snapshot => {
