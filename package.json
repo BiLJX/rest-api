@@ -3,7 +3,7 @@
    "scripts": {
     "start": "node server.js"
   },
-  "homepage": "https://moosax-api.herokuapp.com/"
+  "homepage": "https://moosax-api.herokuapp.com/",
   "dependencies": {
     "@tensorflow/tfjs-node": "^2.8.4",
     "body-parser": "^1.19.0",
