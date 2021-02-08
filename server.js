@@ -19,7 +19,7 @@ console.log(firebase.auth().currentUser)
 app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
-app.use('/', express.static(path.join('build')))
+app.use('*', express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
 const db = firebase.database()
 
