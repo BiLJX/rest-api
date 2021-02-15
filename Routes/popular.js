@@ -1,6 +1,11 @@
 import express from "express"
 import Sort from "../Modules/Sort.js"
-import firebase from "firebase"
+import admin from "firebase-admin"
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const serviceAccount = require("../serviceAccountKey.json");
+
 
 const router = express.Router();
 const sort = new Sort;
@@ -15,18 +20,18 @@ function PopularTracks(data) {
 				tempData = value.public.songs
 			}
 		})
-		console.log(tempData)
+		
 		Object.values(tempData).forEach((value) => {
 			popularTracks.push(value)
         })
-		console.log(popularTracks)
+	
         return popularTracks
 	}
 }
 
 
 let data;
-firebase.database().ref("users").on("value", snapshot => {
+admin.database().ref("users").on("value", snapshot => {
 	data = snapshot.val();
 })
 

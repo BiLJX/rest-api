@@ -1,6 +1,9 @@
 import express from "express"
-import firebase from "firebase"
 import findData from "../Modules/search.js"
+import admin from "firebase-admin"
+import { createRequire } from "module";
+const firebase = admin
+const require = createRequire(import.meta.url);
 
 
 const router = express.Router();

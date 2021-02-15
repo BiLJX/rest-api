@@ -78,26 +78,29 @@ class Recomend
        for(let i = 0; i<other.length;i++){
            let sum = 0;
            let score = 0
-           let other_genre = other[i].byGenre
-           //here the calculation starts
-           for(let genre in user){
-               if(other_genre[genre]){
-                   //manhattan distance formula
-                   sum +=  (user[genre]-other_genre[genre])//(x2-x1) + (y2-y1) +......
-                   score = 1/(1+sum )//to reverse the distance and convert to score
-               }
-           }
-           other[i].score = score //sets score in data for comparing later
-           let data; 
-           //converts object to array and stores in var(data)
-           if(other[i].liked){
-            Object.values(other[i].liked).forEach(value=>{
-                data = Object.values(value)
-            })
-            for(let i = 0; i<data.length; i++){
-                songs.push(this.findSongs(data[i].title, data[i].id, score))//needs title and uid to find songs
+           if(other[i]){
+                let other_genre = other[i].byGenre
+                //here the calculation starts
+                for(let genre in user){
+                    if(other_genre[genre]){
+                        //manhattan distance formula
+                        sum +=  (user[genre]-other_genre[genre])//(x2-x1) + (y2-y1) +......
+                        score = 1/(1+sum )//to reverse the distance and convert to score
+                    }
+                }
+                other[i].score = score //sets score in data for comparing later
+                let data; 
+                //converts object to array and stores in var(data)
+                if(other[i].liked){
+                Object.values(other[i].liked).forEach(value=>{
+                    data = Object.values(value)
+                })
+                for(let i = 0; i<data.length; i++){
+                    songs.push(this.findSongs(data[i].title, data[i].id, score))//needs title and uid to find songs
+                }
             }
            }
+          
           
            //finds and stores songs to [songs arr]
           
@@ -131,13 +134,17 @@ class Recomend
         let temp;
         let hasLiked = []
         let filtered = []
-        Object.values(this.user_data.private.feedback.liked).forEach(value=>{
-            temp = value
-        })
-        Object.values(temp).forEach(value=>{
-            hasLiked.push(value.title)
-        })
-        let difference = song.filter(x => !hasLiked.includes(x.info.title));
+        let difference;
+        if(this.user_data.private.feedback.liked){
+            Object.values(this.user_data.private.feedback.liked).forEach(value=>{
+                temp = value
+            })
+            Object.values(temp).forEach(value=>{
+                hasLiked.push(value.title)
+            })
+            difference = song.filter(x => !hasLiked.includes(x.info.title));
+        }
+    
         return difference
     }
 

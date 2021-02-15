@@ -1,11 +1,12 @@
 import express from "express"
-import firebase from "firebase"
-const router = express.Router();
+import admin from "firebase-admin"
 
+
+const router = express.Router();
 router.get("/", (req, res) =>{
 	const uid = req.query.uid
 	let musics = []
-	firebase.database().ref("users/" + uid + "/public/songs/").on("value", snapshot =>{
+	admin.database().ref("users/" + uid + "/public/songs/").on("value", snapshot =>{
 		if(snapshot.val()){
 			Object.values(snapshot.val()).forEach((value)=>{
 				musics.push(value)

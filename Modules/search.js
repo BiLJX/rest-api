@@ -2,11 +2,18 @@ function findData(data, s) {
 	let tempData;
 	let TempDataArr = []
 	Object.values(data).forEach(value => {
-		tempData = value.public.songs
+		
+		if(value.public.songs){
+			tempData = value.public.songs
+		}
 	})
-	Object.values(tempData).forEach(value => {
-		TempDataArr.push(value)
-	})
+	
+	if(tempData){
+		Object.values(tempData).forEach(value => {
+			TempDataArr.push(value)
+		})
+	}
+	
 	const found = TempDataArr.filter(element => {
 		let title = element.info.title.toLocaleLowerCase().includes(s)
 		let artist = element.info.artist.toLocaleLowerCase().includes(s)
