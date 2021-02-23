@@ -5,12 +5,7 @@ import { createRequire } from "module";
 
 
 const require = createRequire(import.meta.url);
-
 const router = express.Router();
-
-
-
-
 const db = admin.database();
 
 //adds or removes like
@@ -93,7 +88,6 @@ function sendNotification(liker_uid, u_uid, title, sio)
         type: "like"
     })
     const io = sio
-    console.log(liker_uid)
     io.to(u_uid).emit("notification", {
 		"newNotification": true,
         "title": title,
