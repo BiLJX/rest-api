@@ -14,18 +14,14 @@ import {router as popularRoute} from "./Routes/popular.js"
 import {router as recomendRoute} from "./Routes/recomend.js"
 import {router as userMusicsRoute} from "./Routes/userMusics.js"
 import {router as likeRoute} from "./Routes/like.js"
+import {router as userLikes} from "./Routes/userLikes.js"
+import {router as listen} from "./Routes/listen.js"
+import {router as upload} from "./Routes/upload.js"
 import * as socketio from 'socket.io';
 import path from "path"
-
 const app = express();
 
-
-
-
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
-console.log(admin.auth().currentUser)
-
 
 app.use(fileupload())
 app.use(cors())
@@ -66,12 +62,15 @@ io.on('connection', socket=>{
 
 
 app.io = io
+app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
 app.use("/api/home/popular", popularRoute)
 app.use("/api/home/recomended", recomendRoute)
 app.use("/api/u/musics", userMusicsRoute)
 app.use("/api/music/like", likeRoute)
+app.use("/api/home/liked", userLikes)
+app.use("/api/listen", listen)
 
 
 app.get("/api/u/data", (req, res)=>{
@@ -93,7 +92,6 @@ app.post("/api/profile/update", (req, res)=>
 {
 	const body = req.body.update
 	const data = req.body.update.data
-	console.log(body)
 	db.ref("users/"+body.temp.userId+"/public/profile").update(data)
 })
 
