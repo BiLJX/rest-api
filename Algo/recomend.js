@@ -9,6 +9,7 @@ class Recomend
         this.rawData = data
         this.user_data = data[this.id]
         this.data = Object.values(this.rawData)
+        
     }
 
     //algorithm that returns the songs by user fav genre
@@ -38,6 +39,7 @@ class Recomend
 
     //gets what genre like the most
     getUserGenre() {
+        this.getMySong()
         this.user_genre = []
         let obj = this.user_data.private
         Object.values(obj).forEach(value => {
@@ -62,7 +64,7 @@ class Recomend
     }
 
     similiarity(){
-        let songs = []
+        const data = []
         let user = {
         }
         const other = this.getOthersGenre()
@@ -84,33 +86,53 @@ class Recomend
                 for(let genre in user){
                     if(other_genre[genre]){
                         //manhattan distance formula
-                        sum +=  (user[genre]-other_genre[genre])//(x2-x1) + (y2-y1) +......
-                        score = 1/(1+sum )//to reverse the distance and convert to score
+                        sum +=  (user[genre]-other_genre[genre])**2//(x2-x1) + (y2-y1) +......
+                        score = 1/(1+Math.sqrt(sum))//to reverse the distance and convert to score
                     }
                 }
                 other[i].score = score //sets score in data for comparing later
-                let data; 
-                //converts object to array and stores in var(data)
-                if(other[i].liked){
-                Object.values(other[i].liked).forEach(value=>{
-                    data = Object.values(value)
-                })
-                for(let i = 0; i<data.length; i++){
-                    songs.push(this.findSongs(data[i].title, data[i].id, score))//needs title and uid to find songs
-                }
-            }
+                data.push(other[i])
+                //converts object to array and stores in var(data)  
            }
-          
-          
            //finds and stores songs to [songs arr]
-          
        }
-       return songs //finally returns song
+       return data //finally returns song
     }
 
-
+    similiarity2()
+    {
+        const other_song = this.getOthersGenre()
+        const my_song = this.getMySong()
+       const data = []
+        for(let i = 0; i<other_song.length; i++){
+            if(other_song[i]){
+                const othersLikes =  Object.values(other_song[i].liked)
+                for(let x of othersLikes){
+                    for(let y of my_song){
+                        if (y.song_id == x.song_id){
+                            other_song[i].score += 0.25
+                            data.push(other_song[i])
+                        }
+                    }
+                }
+            }
+        }
+        return data
+    }
     getOthersSong(){
+        let data = []
+        Object.values(this.rawData).forEach(value=>{
+            if(value.private['login credentials'].userId != this.id){
+                data.push(value?.private?.feedback?.liked)
+            }
+        })
+        return data
+    }
 
+    getMySong()
+    {
+        const data = this.user_data.private.feedback.liked
+        return Object.values(data)
     }
 
 
@@ -137,14 +159,12 @@ class Recomend
         let difference;
         if(this.user_data.private.feedback.liked){
             Object.values(this.user_data.private.feedback.liked).forEach(value=>{
-                temp = value
+               
+               hasLiked.push(value.song_id)
             })
-            Object.values(temp).forEach(value=>{
-                hasLiked.push(value.title)
-            })
-            difference = song.filter(x => !hasLiked.includes(x.info.title));
+            
+            difference = song.filter(x => !hasLiked.includes(x.info.songID));
         }
-    
         return difference
     }
 
@@ -173,26 +193,33 @@ class Recomend
         return data
     }
 
-    findSongs(title, uid, score){
-        this.rawData[uid].public.songs[title].recomend.score += score
+    findSongs(title, uid){
         return this.rawData[uid].public.songs[title]
     }
 
     recomendations(){
-        const by_genre = this.byGenre()
         const similiarity = this.similiarity()
-        let total = by_genre.concat(similiarity)
-      
+        const similiarity2 = this.similiarity2()
+        const tracks = []
+        this.similiarity2()
+        const total = similiarity.concat(similiarity2)
+        
         for(let i = 0; i<total.length; i++){
             for(let j = i+1; j<total.length; j++){
-                if(total[i].recomend.score<total[j].recomend.score){
+                if(total[i].score<total[j].score){
                     let temp = total[i]
                     total[i] = total[j]
                     total[j] = temp
                 }
             }
         }
-        return this.newSong(total) 
+        for(let i = 0; i<total.length; i++){
+           const temp = Object.values(total[i].liked)
+           for(let x of temp){
+                tracks.push(this.findSongs(x.song_id, x.id))
+           }
+        } 
+        return this.newSong(tracks) 
     }
 }
 
