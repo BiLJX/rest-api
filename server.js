@@ -42,7 +42,9 @@ let data = 0
 
 //routes
 
-const server = app.listen(process.env.PORT || 4000, () => console.log("listening at port 4000..."))
+const server = app.listen(process.env.PORT || 3000, function(){
+  console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+});
 const io = new socketio.Server(server)
 let id;
 io.on('connection', socket=>{
