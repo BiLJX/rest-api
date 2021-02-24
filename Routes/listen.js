@@ -10,6 +10,7 @@ function getSongById(uid, sid)
     db.ref("users/"+uid+"/public/songs/"+sid).on("value", snapshot=>{
         
         track = snapshot.val()
+        
     })
     return track
 }

@@ -18,16 +18,20 @@ import {router as userLikes} from "./Routes/userLikes.js"
 import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
 import * as socketio from 'socket.io';
+import cookieParser from "cookie-parser"
+import csrf from "csurf"
 import path from "path"
 const app = express();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
+const csrfMiddleware = csrf({ cookie: true })
 app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
-// app.use(express.static(path.join('build')))
+app.use(express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
+app.use(cookieParser())
+app.use(csrfMiddleware)
 const db = admin.database()
 
 let recomend;
@@ -35,12 +39,10 @@ let data = 0
 
 
 
-// app.get('/*', (req, res)=>{
-// 	res.sendFile(path.join(__dirname,'build', 'index.html'))
-// })
 
 //routes
-const server = app.listen(4000, () => console.log("listening at port 4000..."))
+
+const server = app.listen(process.env.PORT || 4000, () => console.log("listening at port 4000..."))
 const io = new socketio.Server(server)
 let id;
 io.on('connection', socket=>{
@@ -62,6 +64,10 @@ io.on('connection', socket=>{
 
 
 app.io = io
+app.all("*", (req, res, next)=>{
+	res.cookie("XSRF-TOKEN", req.csrfToken());
+	next();
+})
 app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
@@ -72,7 +78,10 @@ app.use("/api/music/like", likeRoute)
 app.use("/api/home/liked", userLikes)
 app.use("/api/listen", listen)
 
-
+app.get('/*', (req, res)=>{
+	res.render()
+	res.sendFile(path.join(__dirname,'build', 'index.html'))
+})
 app.get("/api/u/data", (req, res)=>{
 	const uid = req.query.uid
 	let data;
@@ -99,7 +108,22 @@ app.post("/api/profile/update", (req, res)=>
 
 
 
-
+app.post("/api/login", (req, res)=>{
+	const idToken = req.body.idToken.toString()
+	const expiresIn = 60*60*24*5*1000
+	admin.auth()
+	.createSessionCookie(idToken, { expiresIn }) 
+	.then(
+		(sessionCookie)=>{
+			const options = {maxAge: expiresIn, httpOnly: true};
+			res.cookie("session", sessionCookie, options)
+			res.end(JSON.stringify({status: "success"}))
+		},
+		(error)=>{
+			res.status(401).send("UNAUTHORIZED REQUEST!")
+		}
+	)
+})
 
 
 app.get("/api/u/notification", (req, res)=>
@@ -113,4 +137,20 @@ app.get("/api/u/notification", (req, res)=>
 	})
 	res.send(notifications)
 })
+
+// app.get("/", (req, res)=>{
+// 	const sessionCookie = req.cookies.session || ""
+// 	console.log("sessionCookie")
+// 	admin
+// 	.auth()
+// 	.verifySessionCookie(sessionCookie, true)
+// 	.then(()=>{
+// 		res.sendFile(path.join(__dirname,'build', 'index.html'))
+// 	}).catch(err=>{
+// 		res.redirect("/login")
+// 	})
+// })
+
+
+
 

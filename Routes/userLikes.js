@@ -11,9 +11,9 @@ function getUserLikes(uid)
 {
     let likes = []
     db.ref(`users/${uid}/private/feedback/liked`).on("value", snapshot=>{
-        let temp;
-        Object.values(snapshot.val()).forEach(value=>temp=value)
-        likes = Object.values(temp)
+        if(snapshot.val()){
+            likes = Object.values(snapshot.val())
+        }
     })
     return likes
 }
