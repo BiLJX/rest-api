@@ -78,10 +78,7 @@ app.use("/api/music/like", likeRoute)
 app.use("/api/home/liked", userLikes)
 app.use("/api/listen", listen)
 
-app.get('/*', (req, res)=>{
-	res.render()
-	res.sendFile(path.join(__dirname,'build', 'index.html'))
-})
+
 app.get("/api/u/data", (req, res)=>{
 	const uid = req.query.uid
 	let data;
@@ -136,6 +133,10 @@ app.get("/api/u/notification", (req, res)=>
 		}
 	})
 	res.send(notifications)
+})
+
+app.get('/*', (req, res)=>{
+	res.sendFile(path.join(__dirname,'build', 'index.html'))
 })
 
 // app.get("/", (req, res)=>{
