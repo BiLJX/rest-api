@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server"
   },
   "dependencies": {
     "@tensorflow/tfjs-node": "^2.8.4",
