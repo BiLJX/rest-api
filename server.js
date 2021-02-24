@@ -18,20 +18,18 @@ import {router as userLikes} from "./Routes/userLikes.js"
 import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
 import * as socketio from 'socket.io';
-import cookieParser from "cookie-parser"
-import csrf from "csurf"
 import path from "path"
 const app = express();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const csrfMiddleware = csrf({ cookie: true })
+
 app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
 app.use(express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
-app.use(cookieParser())
-app.use(csrfMiddleware)
+
+
 const db = admin.database()
 
 let recomend;
@@ -64,10 +62,7 @@ io.on('connection', socket=>{
 
 
 app.io = io
-app.all("*", (req, res, next)=>{
-	res.cookie("XSRF-TOKEN", req.csrfToken());
-	next();
-})
+
 app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
@@ -108,18 +103,7 @@ app.post("/api/profile/update", (req, res)=>
 app.post("/api/login", (req, res)=>{
 	const idToken = req.body.idToken.toString()
 	const expiresIn = 60*60*24*5*1000
-	admin.auth()
-	.createSessionCookie(idToken, { expiresIn }) 
-	.then(
-		(sessionCookie)=>{
-			const options = {maxAge: expiresIn, httpOnly: true};
-			res.cookie("session", sessionCookie, options)
-			res.end(JSON.stringify({status: "success"}))
-		},
-		(error)=>{
-			res.status(401).send("UNAUTHORIZED REQUEST!")
-		}
-	)
+	
 })
 
 
