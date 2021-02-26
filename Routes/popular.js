@@ -2,7 +2,7 @@ import express from "express"
 import Sort from "../Modules/Sort.js"
 import admin from "firebase-admin"
 import { createRequire } from "module";
-
+import {putInfo} from "../Modules/putInfo.js"
 const require = createRequire(import.meta.url);
 const serviceAccount = require("../serviceAccountKey.json");
 
@@ -36,7 +36,7 @@ admin.database().ref("users").on("value", snapshot => {
 })
 
 router.get("/", (req, res) => {
-	res.send(sort.popular(PopularTracks(data)))
+	res.send(putInfo(sort.popular(PopularTracks(data))))
 })
 
 

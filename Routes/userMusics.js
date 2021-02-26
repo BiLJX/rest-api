@@ -1,6 +1,6 @@
 import express from "express"
 import admin from "firebase-admin"
-
+import {putInfo} from "../Modules/putInfo.js"
 
 const router = express.Router();
 router.get("/", (req, res) =>{
@@ -13,7 +13,7 @@ router.get("/", (req, res) =>{
 			})
 		}
 	})
-	res.send(musics)
+	res.send(putInfo(musics))
 })
 
 export {router}

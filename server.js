@@ -17,6 +17,7 @@ import {router as likeRoute} from "./Routes/like.js"
 import {router as userLikes} from "./Routes/userLikes.js"
 import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
+import {router as notifications} from "./Routes/notification.js"
 import * as socketio from 'socket.io';
 import path from "path"
 const app = express();
@@ -28,7 +29,6 @@ app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
 app.use(express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
-
 
 const db = admin.database()
 
@@ -62,7 +62,10 @@ io.on('connection', socket=>{
 
 
 app.io = io
-
+// app.all("*", (req, res, next)=>{
+// 	res.cookie("XSRF-TOKEN", req.csrfToken());
+// 	next();
+// })
 app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
@@ -72,6 +75,7 @@ app.use("/api/u/musics", userMusicsRoute)
 app.use("/api/music/like", likeRoute)
 app.use("/api/home/liked", userLikes)
 app.use("/api/listen", listen)
+app.use("/api/u/notification", notifications)
 
 
 app.get("/api/u/data", (req, res)=>{
@@ -103,21 +107,21 @@ app.post("/api/profile/update", (req, res)=>
 app.post("/api/login", (req, res)=>{
 	const idToken = req.body.idToken.toString()
 	const expiresIn = 60*60*24*5*1000
-	
+	// admin.auth()
+	// .createSessionCookie(idToken, { expiresIn }) 
+	// .then(
+	// 	(sessionCookie)=>{
+	// 		const options = {maxAge: expiresIn, httpOnly: true};
+	// 		res.cookie("session", sessionCookie, options)
+	// 		res.end(JSON.stringify({status: "success"}))
+	// 	},
+	// 	(error)=>{
+	// 		res.status(401).send("UNAUTHORIZED REQUEST!")
+	// 	}
+	// )
 })
 
 
-app.get("/api/u/notification", (req, res)=>
-{
-	const uid = req.query.uid
-	let notifications = []
-	db.ref("users/"+uid+"/private/new/notifications").on("value", snapshot=>{
-		if(snapshot.val()){
-			Object.values(snapshot.val()).forEach(value=>notifications.push(value))
-		}
-	})
-	res.send(notifications)
-})
 
 app.get('/*', (req, res)=>{
 	res.sendFile(path.join(__dirname,'build', 'index.html'))
