@@ -57,11 +57,6 @@ class Recomend
         return this.user_genre
     }
 
-    SimiliaritySongs(){
-        let songs = []
-        let user = {}
-
-    }
 
     similiarity(){
         const data = []
@@ -87,7 +82,7 @@ class Recomend
                     if(other_genre[genre]){
                         //manhattan distance formula
                         sum +=  (user[genre]-other_genre[genre])**2//(x2-x1) + (y2-y1) +......
-                        score = 1/(1+Math.sqrt(sum))//to reverse the distance and convert to score
+                        score = 1/(10+Math.sqrt(sum))//to reverse the distance and convert to score
                     }
                 }
                 other[i].score = score //sets score in data for comparing later
@@ -110,7 +105,7 @@ class Recomend
                 for(let x of othersLikes){
                     for(let y of my_song){
                         if (y.song_id == x.song_id){
-                            other_song[i].score += 0.25
+                            other_song[i].score += 1
                             data.push(other_song[i])
                         }
                     }
@@ -197,13 +192,23 @@ class Recomend
         return this.rawData[uid].public.songs[title]
     }
 
+    sigmoid(x)
+    {
+        return 1/(1+Math.exp(-x))
+    }
+
     recomendations(){
         const similiarity = this.similiarity()
         const similiarity2 = this.similiarity2()
         const tracks = []
         this.similiarity2()
-        const total = similiarity.concat(similiarity2)
-        
+        const total1 = similiarity2.concat(similiarity)
+        const total = []
+
+        for(let y of total1){
+            y.score = this.sigmoid(y.score)
+            total.push(y)
+        }
         for(let i = 0; i<total.length; i++){
             for(let j = i+1; j<total.length; j++){
                 if(total[i].score<total[j].score){
@@ -214,10 +219,12 @@ class Recomend
             }
         }
         for(let i = 0; i<total.length; i++){
-           const temp = Object.values(total[i].liked)
-           for(let x of temp){
-                tracks.push(this.findSongs(x.song_id, x.id))
-           }
+            if(total[i].score >= 0.6){
+                const temp = Object.values(total[i].liked)
+                for(let x of temp){
+                     tracks.push(this.findSongs(x.song_id, x.id))
+                }
+            }
         } 
         return this.newSong(tracks) 
     }
