@@ -100,7 +100,7 @@ router.post("/send", (req, res)=>
 {
     const io = req.app.io
     const body = req.body
-    const likedBy = body.likedBy
+    const likedBy = req.app.uid
     const likedOf = body.likedOf
     const songID = body.songID
     const song = body.song

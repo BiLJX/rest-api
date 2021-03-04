@@ -15,9 +15,15 @@ firebase.database().ref("users").on("value", snapshot => {
 })
 
 router.get("/", (req, res) => {
-	const search = req.query.search.toLocaleLowerCase();
-	const result = findData(data, search)
-	res.send(putInfo(result))
+	if(req.query.search.toLocaleLowerCase()){
+		const search = req.query.search.toLocaleLowerCase();
+		console.log(search)
+		const result = findData(data, search)
+		res.send(putInfo(result, req.app.uid))
+	}else{
+		res.redirect("/")
+	}
+
 })
 
 export {router}

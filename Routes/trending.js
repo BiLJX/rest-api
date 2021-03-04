@@ -31,8 +31,7 @@ admin.database().ref("users").on("value", snapshot => {
 })
 
 router.get("/", (req, res) => {
-	
-	res.send(putInfo( sort.trending(PopularTracks(data))))
+	res.send(putInfo( sort.trending(PopularTracks(data)), req.app.uid))
 })
 
 export {router}

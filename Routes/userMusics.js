@@ -13,7 +13,7 @@ router.get("/", (req, res) =>{
 			})
 		}
 	})
-	res.send(putInfo(musics))
+	res.send(putInfo(musics, req.app.uid))
 })
 
 export {router}

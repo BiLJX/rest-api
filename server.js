@@ -3,7 +3,6 @@ import admin from 'firebase-admin';
 import express from "express"
 import cors from "cors"
 import "./firebase.js"
-import { createRequire } from "module";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from "body-parser"
@@ -20,10 +19,15 @@ import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
 import * as socketio from 'socket.io';
 import path from "path"
+import cookieParser from "cookie-parser"
+import csrf from 'csurf';
 const app = express();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const csrfMiddleware = csrf({cookie: true})
 
+app.use(cookieParser())
+app.use(csrfMiddleware)
 app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
@@ -62,10 +66,78 @@ io.on('connection', socket=>{
 
 
 app.io = io
-// app.all("*", (req, res, next)=>{
-// 	res.cookie("XSRF-TOKEN", req.csrfToken());
-// 	next();
-// })
+
+
+app.all("*", (req, res, next)=>{
+	res.cookie("XSRF-TOKEN", req.csrfToken());
+
+	next();
+})
+
+
+
+
+app.post("/api/login", (req, res)=>{
+	const idToken = req.body.idToken.toString()
+	const expiresIn = 60*60*24*5*1000
+	admin.auth()
+	.createSessionCookie(idToken, { expiresIn }) 
+	.then(
+		(sessionCookie)=>{
+			const options = {maxAge: expiresIn, httpOnly: true};
+			res.cookie("session", sessionCookie, options)
+			res.end(JSON.stringify({status: "success"}))
+		},
+		(error)=>{
+			res.status(401).send("UNAUTHORIZED REQUEST!")
+		}
+	)
+})
+
+app.get("/signout", (req, res)=>{
+	console.log("hey")
+	//res.send({"signedout": true})
+	res.clearCookie("session")
+	res.end("success")
+})
+
+
+
+
+app.get("/isLoggedIn", (req, res)=>{
+	const token = req.cookies.session||"";
+	admin.auth().verifySessionCookie(token)
+	.then(()=>res.send({"signedout": false}))
+	.catch((err)=>{
+		res.send({"signedout": true})
+	})
+})
+
+app.use((req, res, next)=>{
+	const token = req.cookies.session||"";
+	admin.auth().verifySessionCookie(token)
+	.then(()=>next())
+	.catch((err)=>{
+		// res.send({"signedout": true})
+	})
+})
+
+app.use("*", (req, res, next)=>{
+	const token = req.cookies.session
+	admin.auth().verifySessionCookie(token, true)
+	.then((decodedToken)=>{
+		app.uid = decodedToken.uid
+		next()
+	})
+	.catch((err)=>console.log(err))
+})
+
+app.get("/api/userId", (req, res)=>{
+	console.log(app.uid)
+	res.send({"uid": app.uid})
+})
+
+
 app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
@@ -76,6 +148,7 @@ app.use("/api/music/like", likeRoute)
 app.use("/api/home/liked", userLikes)
 app.use("/api/listen", listen)
 app.use("/api/u/notification", notifications)
+
 
 
 app.get("/api/u/data", (req, res)=>{
@@ -97,35 +170,30 @@ app.post("/api/profile/update", (req, res)=>
 {
 	const body = req.body.update
 	const data = req.body.update.data
-	db.ref("users/"+body.temp.userId+"/public/profile").update(data)
+	db.ref("users/"+app.uid+"/public/profile").update(data)
 })
 
 
 
 
 
-app.post("/api/login", (req, res)=>{
-	const idToken = req.body.idToken.toString()
-	const expiresIn = 60*60*24*5*1000
-	// admin.auth()
-	// .createSessionCookie(idToken, { expiresIn }) 
-	// .then(
-	// 	(sessionCookie)=>{
-	// 		const options = {maxAge: expiresIn, httpOnly: true};
-	// 		res.cookie("session", sessionCookie, options)
-	// 		res.end(JSON.stringify({status: "success"}))
-	// 	},
-	// 	(error)=>{
-	// 		res.status(401).send("UNAUTHORIZED REQUEST!")
-	// 	}
-	// )
-})
+
+
+
+
+
 
 
 
 app.get('/*', (req, res)=>{
 	res.sendFile(path.join(__dirname,'build', 'index.html'))
 })
+
+
+
+
+
+
 
 // app.get("/", (req, res)=>{
 // 	const sessionCookie = req.cookies.session || ""

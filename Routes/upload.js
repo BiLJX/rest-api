@@ -43,7 +43,6 @@ async function upload_info(data)
         },
         "stats":{
             "views": 0,
-            "likes": 0
         } ,
         "recomend":{
             "byGenre": 0,
