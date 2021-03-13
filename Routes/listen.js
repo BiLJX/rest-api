@@ -8,9 +8,7 @@ function getSongById(uid, sid)
 {
     let track;
     db.ref("users/"+uid+"/public/songs/"+sid).on("value", snapshot=>{
-        
         track = snapshot.val()
-        
     })
     return track
 }

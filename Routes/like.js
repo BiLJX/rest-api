@@ -36,7 +36,6 @@ function sendLike(liker_uid, u_uid, song_id, music, io)
     const fb_ref = db.ref("users/"+liker_uid+"/private/feedback/liked/"+song_id)
     let counter2
     likeRef.on("value", snapshot=>{
-        console.log(song_id)
         counter2 = snapshot.val().likes
     })
 
@@ -105,6 +104,7 @@ router.post("/send", (req, res)=>
     const songID = body.songID
     const song = body.song
     sendLike(likedBy, likedOf, songID, song, io)
+    res.end("success")
 })
 
 

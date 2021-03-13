@@ -2,7 +2,7 @@ class Sort{
     popular(data){
         for (let i = 0; i <= data.length; i++) {
             for (let j = i + 1; j < data.length; j++) {
-                if (data[i].views < data[j].views) {
+                if (data[i].stats.views < data[j].stats.views) {
                     const temp = data[i]
                     data[i] = data[j]
                     data[j] = temp

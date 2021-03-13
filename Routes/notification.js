@@ -6,8 +6,8 @@ const router = express.Router();
 const db = admin.database()
 router.get("/", (req, res)=>
 {
-	const uid = req.query.uid
-	let notifications = []
+	const uid = req.app.uid
+	const notifications = []
 	db.ref("users/"+uid+"/private/new/notifications").on("value", snapshot=>{
 		if(snapshot.val()){
             const data =snapshot.val()

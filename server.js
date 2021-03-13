@@ -17,6 +17,7 @@ import {router as userLikes} from "./Routes/userLikes.js"
 import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
+import {router as viewsUpdate} from "./Routes/views.js"
 import * as socketio from 'socket.io';
 import path from "path"
 import cookieParser from "cookie-parser"
@@ -24,27 +25,24 @@ import csrf from 'csurf';
 const app = express();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const csrfMiddleware = csrf({cookie: true})
-
-app.use(cookieParser())
-app.use(csrfMiddleware)
-app.use(fileupload())
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
-app.use(express.static(path.join('build')))
 app.use(bodyParser.json({limit: '100mb'}));
+app.use(express.static(path.join('build')))
+app.use(cookieParser())
+app.use(csrf({cookie: true}))
+
+app.use("*", (req, res, next)=>{
+	res.cookie("XSRF-TOKEN", req.csrfToken());
+	next();
+})
 
 const db = admin.database()
-
-let recomend;
-let data = 0
-
-
-
 
 //routes
 
 const server = app.listen(process.env.PORT || 4000, () => console.log("listening at port 4000..."))
+
 const io = new socketio.Server(server)
 let id;
 io.on('connection', socket=>{
@@ -68,17 +66,13 @@ io.on('connection', socket=>{
 app.io = io
 
 
-app.all("*", (req, res, next)=>{
-	res.cookie("XSRF-TOKEN", req.csrfToken());
 
-	next();
-})
 
 
 
 
 app.post("/api/login", (req, res)=>{
-	const idToken = req.body.idToken.toString()
+	const idToken = req.body.data.toString()
 	const expiresIn = 60*60*24*5*1000
 	admin.auth()
 	.createSessionCookie(idToken, { expiresIn }) 
@@ -95,7 +89,7 @@ app.post("/api/login", (req, res)=>{
 })
 
 app.get("/signout", (req, res)=>{
-	console.log("hey")
+
 	//res.send({"signedout": true})
 	res.clearCookie("session")
 	res.end("success")
@@ -113,17 +107,17 @@ app.get("/isLoggedIn", (req, res)=>{
 	})
 })
 
-app.use((req, res, next)=>{
-	const token = req.cookies.session||"";
-	admin.auth().verifySessionCookie(token)
-	.then(()=>next())
-	.catch((err)=>{
-		// res.send({"signedout": true})
-	})
-})
+// app.use((req, res, next)=>{
+// 	const token = req.cookies.session||"";
+// 	admin.auth().verifySessionCookie(token)
+// 	.then(()=>next())
+// 	.catch((err)=>{
+// 		// res.send({"signedout": true})
+// 	})
+// })
 
 app.use("*", (req, res, next)=>{
-	const token = req.cookies.session
+	const token = req.cookies.session||"";
 	admin.auth().verifySessionCookie(token, true)
 	.then((decodedToken)=>{
 		app.uid = decodedToken.uid
@@ -133,11 +127,11 @@ app.use("*", (req, res, next)=>{
 })
 
 app.get("/api/userId", (req, res)=>{
-	console.log(app.uid)
 	res.send({"uid": app.uid})
 })
 
 
+app.use("/api/music/views", viewsUpdate)
 app.use("/api/music/upload", upload)
 app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
