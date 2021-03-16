@@ -43,6 +43,7 @@ async function upload_info(data)
         },
         "stats":{
             "views": 0,
+            "likes": 0
         } ,
         "recomend":{
             "byGenre": 0,
@@ -63,6 +64,7 @@ async function upload_info(data)
 
 router.post("/", (req, res)=>{
     const data = req.body
+    data.userID = req.app.uid
     upload_info(data).then(()=> res.send({"upload_status": "ok"}))
    
 })
