@@ -164,7 +164,9 @@ app.post("/api/profile/update", (req, res)=>
 {
 	const body = req.body.update
 	const data = req.body.update.data
-	db.ref("users/"+app.uid+"/public/profile").update(data)
+	db.ref("users/"+app.uid+"/public/profile").update(data).then(()=>{
+		res.send({"status": "ok"})
+	})
 })
 
 
