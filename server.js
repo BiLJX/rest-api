@@ -18,6 +18,7 @@ import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
 import {router as viewsUpdate} from "./Routes/views.js"
+import {router as follow} from "./Routes/follow.js"
 import * as socketio from 'socket.io';
 import path from "path"
 import cookieParser from "cookie-parser"
@@ -38,10 +39,12 @@ app.use("*", (req, res, next)=>{
 })
 
 const db = admin.database()
-
+const dbc = admin.firestore()
 //routes
 
-const server = app.listen(process.env.PORT || 4000, () => console.log("listening at port 4000..."))
+const server = app.listen(process.env.PORT || 4000, () => {
+	console.log("listening at port 4000...")
+})
 
 const io = new socketio.Server(server)
 let id;
@@ -73,7 +76,7 @@ app.io = io
 
 app.post("/api/login", (req, res)=>{
 	const idToken = req.body.data.toString()
-	const expiresIn = 60*60*24*5*1000
+	const expiresIn = 60*60*24*14*1000
 	admin.auth()
 	.createSessionCookie(idToken, { expiresIn }) 
 	.then(
@@ -83,6 +86,7 @@ app.post("/api/login", (req, res)=>{
 			res.end(JSON.stringify({status: "success"}))
 		},
 		(error)=>{
+			console.log(error)
 			res.status(401).send("UNAUTHORIZED REQUEST!")
 		}
 	)
@@ -142,15 +146,18 @@ app.use("/api/music/like", likeRoute)
 app.use("/api/home/liked", userLikes)
 app.use("/api/listen", listen)
 app.use("/api/u/notification", notifications)
+app.use("/api/u/follow", follow)
 
 
-
-app.get("/api/u/data", (req, res)=>{
+app.get("/api/u/data", async (req, res)=>{
 	const uid = req.query.uid
 	let data;
 	admin.database().ref("users/" + uid ).on("value", (snapshot) => {
 		data = snapshot.val()
 	})
+	if(data?.public?.following?.[req.app.uid]){
+		data.isFollowing = true
+	}
 	res.send(data)
 })
 

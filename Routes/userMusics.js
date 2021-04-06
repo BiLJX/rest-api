@@ -3,7 +3,8 @@ import admin from "firebase-admin"
 import {putInfo} from "../Modules/putInfo.js"
 
 const router = express.Router();
-router.get("/", (req, res) =>{
+const db = admin.firestore()
+router.get("/", async (req, res) =>{
 	const uid = req.query.uid
 	let musics = []
 	admin.database().ref("users/" + uid + "/public/songs/").on("value", snapshot =>{

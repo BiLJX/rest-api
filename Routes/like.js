@@ -2,9 +2,6 @@ import express from "express"
 import admin from 'firebase-admin';
 import { createRequire } from "module";
 
-
-
-const require = createRequire(import.meta.url);
 const router = express.Router();
 const db = admin.database();
 
