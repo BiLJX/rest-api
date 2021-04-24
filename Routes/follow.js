@@ -7,8 +7,8 @@ const db = admin.database();
 async function follow(c_uid, uid)
 {
     
-    const ref = db.ref("users/"+c_uid+"/public/following/"+uid)
-    const f_ref = db.ref("users/"+uid+"/public/followers/"+c_uid)
+    const ref = db.ref("users/"+c_uid+"/public/followers/"+uid)
+    const f_ref = db.ref("users/"+uid+"/public/following/"+c_uid)
     await ref.once("value").then(snapshot=>{
         const data = snapshot.val()
         if(data){

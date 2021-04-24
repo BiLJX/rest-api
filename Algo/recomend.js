@@ -148,16 +148,12 @@ class Recomend
 
     //checks if the user has previously liked or not
     newSong(song){
-        let temp;
         let hasLiked = []
-        let filtered = []
         let difference;
         if(this.user_data.private.feedback.liked){
             Object.values(this.user_data.private.feedback.liked).forEach(value=>{
-               
                hasLiked.push(value.song_id)
             })
-            
             difference = song.filter(x => !hasLiked.includes(x.info.songID));
         }
         return difference

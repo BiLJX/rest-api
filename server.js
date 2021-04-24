@@ -19,6 +19,7 @@ import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
 import {router as viewsUpdate} from "./Routes/views.js"
 import {router as follow} from "./Routes/follow.js"
+import {router as RecommendFollowing} from "./Routes/RecommendFollowing.js"
 import * as socketio from 'socket.io';
 import path from "path"
 import cookieParser from "cookie-parser"
@@ -39,10 +40,10 @@ app.use("*", (req, res, next)=>{
 })
 
 const db = admin.database()
-const dbc = admin.firestore()
 //routes
 
 const server = app.listen(process.env.PORT || 4000, () => {
+
 	console.log("listening at port 4000...")
 })
 
@@ -148,6 +149,9 @@ app.use("/api/listen", listen)
 app.use("/api/u/notification", notifications)
 app.use("/api/u/follow", follow)
 
+app.use("/api/home/following", RecommendFollowing)
+
+
 
 app.get("/api/u/data", async (req, res)=>{
 	const uid = req.query.uid
@@ -155,7 +159,7 @@ app.get("/api/u/data", async (req, res)=>{
 	admin.database().ref("users/" + uid ).on("value", (snapshot) => {
 		data = snapshot.val()
 	})
-	if(data?.public?.following?.[req.app.uid]){
+	if(data?.public?.followers?.[req.app.uid]){
 		data.isFollowing = true
 	}
 	res.send(data)

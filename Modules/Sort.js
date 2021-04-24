@@ -26,9 +26,7 @@ class Sort{
     trending(tData, date){
             for(let i = 0; i<tData.length; i++){
                 for (let j = i+1; i<tData.length; i++){
-                   
                     if(tData[i]){
-                        
                         let views1 = tData[i].views;
                         let views2 = tData[j].views;
                         let totalDate1 = tData[i].date.totalDate;
@@ -45,11 +43,7 @@ class Sort{
                     }
                 }
             }
-            
             return tData
-      
-        
-        
     }
 }
 export default Sort
