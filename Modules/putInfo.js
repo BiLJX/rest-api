@@ -1,13 +1,12 @@
 import  {getAll} from "./find.js"
 
 
-function putInfo(tracks = [], uid)
+function putInfo(tracks = [], uid, db)
 {
-    const final = [];
-    tracks.forEach(value=>{
-        value.uploader = getAll(value.info.userID)
-        value.hasLiked = value.widgetInfo && value.widgetInfo.likes[uid] != undefined
-        final.push(value)
+    const final = tracks.map(value=>{
+        value.uploader = getAll(value.info.userID, db)
+        value.hasLiked = value?.likedBy?.find(x=>x.uid === uid)?.liked||false
+        return value
     })
     return final
 }

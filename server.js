@@ -3,30 +3,21 @@ import admin from 'firebase-admin';
 import express from "express"
 import cors from "cors"
 import "./firebase.js"
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import bodyParser from "body-parser"
-import fileupload from "express-fileupload"
-import { router as trendingRoute } from './Routes/trending.js';
 import {router as resultRoute} from "./Routes/result.js"
-import {router as popularRoute} from "./Routes/popular.js"
-import {router as recomendRoute} from "./Routes/recomend.js"
-import {router as userMusicsRoute} from "./Routes/userMusics.js"
-import {router as likeRoute} from "./Routes/like.js"
-import {router as userLikes} from "./Routes/userLikes.js"
 import {router as listen} from "./Routes/listen.js"
 import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
-import {router as viewsUpdate} from "./Routes/views.js"
-import {router as follow} from "./Routes/follow.js"
-import {router as RecommendFollowing} from "./Routes/RecommendFollowing.js"
+import {router as tracks} from "./Routes/tracks.js"
+import {router as home} from "./Routes/home.js"
+import {router as user} from "./Routes/users.js"
+import MongoDb from "mongodb"
 import * as socketio from 'socket.io';
 import path from "path"
 import cookieParser from "cookie-parser"
 import csrf from 'csurf';
+const MongoClient = MongoDb.MongoClient
 const app = express();
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
 app.use(bodyParser.json({limit: '100mb'}));
@@ -39,41 +30,25 @@ app.use("*", (req, res, next)=>{
 	next();
 })
 
-const db = admin.database()
-//routes
 
-const server = app.listen(process.env.PORT || 4000, () => {
+const uri = "mongodb+srv://billjesh:Billu456@cluster0.vyegx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-	console.log("listening at port 4000...")
-})
 
-const io = new socketio.Server(server)
-let id;
-io.on('connection', socket=>{
-	id = socket.handshake.query.id
-	if(id != "null"){
-		socket.join(id)
-		io.to(id).emit("message", {
-			"name": id
-		})
+app.post("/api/account/create", async (req, res)=>{
+	const data = req.body
+	try {
+		const database = client.db('Moosax');
+		const users = database.collection('users');
+		await users.insertOne(data)
+	}finally {
+		// Ensures that the client will close when you finish/error
+		res.send({"status": "ok"})
 	}
 })
-
-
-
-
-
-
-
-
-
-app.io = io
-
-
-
-
-
-
 
 app.post("/api/login", (req, res)=>{
 	const idToken = req.body.data.toString()
@@ -92,6 +67,9 @@ app.post("/api/login", (req, res)=>{
 		}
 	)
 })
+
+
+
 
 app.get("/signout", (req, res)=>{
 
@@ -136,29 +114,28 @@ app.get("/api/userId", (req, res)=>{
 })
 
 
-app.use("/api/music/views", viewsUpdate)
+
+
+
+app.use("/api/music", tracks)
 app.use("/api/music/upload", upload)
-app.use("/api/home/trending", trendingRoute)
 app.use("/api/home/result", resultRoute)
-app.use("/api/home/popular", popularRoute)
-app.use("/api/home/recomended", recomendRoute)
-app.use("/api/u/musics", userMusicsRoute)
-app.use("/api/music/like", likeRoute)
-app.use("/api/home/liked", userLikes)
+app.use("/api/home", home)
+app.use("/api/u", user)
 app.use("/api/listen", listen)
 app.use("/api/u/notification", notifications)
-app.use("/api/u/follow", follow)
 
-app.use("/api/home/following", RecommendFollowing)
 
 
 
 app.get("/api/u/data", async (req, res)=>{
 	const uid = req.query.uid
-	let data;
-	admin.database().ref("users/" + uid ).on("value", (snapshot) => {
-		data = snapshot.val()
-	})
+	const db = client.db("Moosax")
+	const user = db.collection("users")
+	const query = {
+		uid: uid
+	}
+	const data = await user.findOne(query)
 	if(data?.public?.followers?.[req.app.uid]){
 		data.isFollowing = true
 	}
@@ -171,12 +148,42 @@ app.post("/api/profile/checkname", (req, res) =>
 })
 
 
-app.post("/api/profile/update", (req, res)=>
+app.post("/api/profile/update", async (req, res)=>
 {
-	const body = req.body.update
-	const data = req.body.update.data
-	db.ref("users/"+app.uid+"/public/profile").update(data).then(()=>{
-		res.send({"status": "ok"})
+	const data = req.body.update
+	console.log(data)
+	await client.connect()
+	const db = client.db("Moosax")
+	const users = db.collection("users")
+	const query = {
+		uid: app.uid
+	}
+	await users.findOneAndUpdate(query, {$set: data}, {upsert: true})
+	// admin.database().ref("users/"+app.uid+"/public/profile").update(data).then(()=>{
+	// 	res.send({"status": "ok"})
+	// })
+	res.send({"status": "ok"})
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+client.connect().then(()=>{
+	app.listen(process.env.PORT || 4000, () => {
+		app.db = client.db("Moosax")
+		console.log("listening at port 4000...")
 	})
 })
 
@@ -184,36 +191,6 @@ app.post("/api/profile/update", (req, res)=>
 
 
 
-
-
-
-
-
-
-
-
-app.get('/*', (req, res)=>{
-	res.sendFile(path.join(__dirname,'build', 'index.html'))
-})
-
-
-
-
-
-
-
-// app.get("/", (req, res)=>{
-// 	const sessionCookie = req.cookies.session || ""
-// 	console.log("sessionCookie")
-// 	admin
-// 	.auth()
-// 	.verifySessionCookie(sessionCookie, true)
-// 	.then(()=>{
-// 		res.sendFile(path.join(__dirname,'build', 'index.html'))
-// 	}).catch(err=>{
-// 		res.redirect("/login")
-// 	})
-// })
 
 
 

@@ -17,6 +17,14 @@ function getPfp(uid)
     return pfp
 }
 
+function getAllM(uid, database)
+{
+    const db = database
+    let all;
+    db.collection("users").findOne({uid: uid}, (err, result)=>all = result.public.profile)
+    return all
+}
+
 function getAll(uid)
 {
     const db = admin.database().ref("users/"+uid+"/public/profile/")
@@ -25,4 +33,4 @@ function getAll(uid)
     return all
 }
 
-export {getUserName, getPfp, getAll}
+export {getUserName, getPfp, getAll, getAllM}
