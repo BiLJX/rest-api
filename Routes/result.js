@@ -14,15 +14,28 @@ firebase.database().ref("users").on("value", snapshot => {
 	data = snapshot.val();
 })
 
-router.get("/", (req, res) => {
-	if(req.query.search.toLocaleLowerCase()){
-		const search = req.query.search.toLocaleLowerCase();
-		const result = findData(data, search)
-		res.send(putInfo(result, req.app.uid))
-	}else{
-		res.redirect("/")
-	}
-
+router.get("/", async (req, res) => {
+	const search = req.query.search;
+	const db = req.app.db;
+	const tracks = db.collection("tracks")
+	const result = await tracks.aggregate(
+        [
+            {
+              '$search': {
+                'index': 'search', 
+                'text': {
+                  'query': search, 
+                  'path': 'info.title', 
+                  'fuzzy': {
+                    'maxEdits': 2, 
+                    'prefixLength': 3
+                  }
+                }
+              }
+            }
+          ]
+    ).toArray()
+	res.send(putInfo(result))
 })
 
 export {router}
