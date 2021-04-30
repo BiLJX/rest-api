@@ -2,6 +2,8 @@
 import admin from 'firebase-admin';
 import express from "express"
 import cors from "cors"
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import "./firebase.js"
 import bodyParser from "body-parser"
 import {router as resultRoute} from "./Routes/result.js"
@@ -16,7 +18,8 @@ import * as socketio from 'socket.io';
 import path from "path"
 import cookieParser from "cookie-parser"
 import csrf from 'csurf';
-const MongoClient = MongoDb.MongoClient
+const MongoClient = MongoDb.MongoClient;
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(cors())
 app.use(bodyParser.urlencoded({extended : true, limit: "100mb"}));
@@ -166,25 +169,15 @@ app.post("/api/profile/update", async (req, res)=>
 })
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 client.connect().then(()=>{
 	app.listen(process.env.PORT || 4000, () => {
 		app.db = client.db("Moosax")
 		console.log("listening at port 4000...")
 	})
+})
+
+app.get('/*', (req, res)=>{
+	res.sendFile(path.join(__dirname,'build', 'index.html'))
 })
 
 

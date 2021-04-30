@@ -41,6 +41,7 @@ export const like = async (req, res) => {
         $push: {
             tracks: {
                 sid: song_id,
+                uid: likedOf,
                 likedAt: moment().format(),
                 likedOf: likedOf
             }

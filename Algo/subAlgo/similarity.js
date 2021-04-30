@@ -1,42 +1,68 @@
 import {Rank} from "./Rank.js"
 
-import admin from "firebase-admin"
-
-
-const db = admin.database()
 class Similarity
 {
-    constructor(user_data, others_data){
-        this.user_data = user_data||[];
-        this.others_data = others_data
-        this.uid =user_data.private['login credentials'] .userId
-    }
-    similiarity()
-    {
-        const others = this.others_data.filter(x=>x.private['login credentials'].userId != this.uid)
-        const genres = this.#getUserGenre()
-        const user = this.user_data
-        for(let i = 0; i<others.length; i++){
-            let sum = 0
-            for(let j = 0; j<genres.length; j++){
-                const others_genre = others[i].private.feedback.byGenre[genres[j]];
-                const user_genre = user.private.feedback.byGenre[genres[j]];
-                if(others_genre){
-                    //KNN
-                    const squared = (others_genre-user_genre)*(others_genre-user_genre);
-                    sum += squared;
-                }
-            }
-            others[i].score = 1/(1+Math.sqrt(sum))
-        }
-        return this.#sort(others)
+    constructor(selectedUsers, user, db){
+        this.selectedUsers = selectedUsers
+        this.user = user
+        this.similarUsers = []
+        this.db = db
     }
 
-    //converts to array                                                                                      
-    #getUserGenre()
+    similiarityBygenre(genres_array)
     {
-        return Object.keys(this.user_data.private.feedback.byGenre)
+        const prom = new Promise((res, rej)=>{
+            const others = this.selectedUsers
+            const genres = genres_array
+            const user = this.user
+            for(let i = 0; i<others.length; i++){
+                let sum = 0
+                for(let j = 0; j<genres.length; j++){
+                    const other_genre = others[i].byLiked.genre[genres[j]];
+                    const user_genre = user.byLiked.genre[genres[j]];
+                    if(other_genre){
+                        //KNN
+                        const squared = (other_genre-user_genre)*(other_genre-user_genre);
+                        sum += squared;
+                    }
+                }
+                others[i].score += sum>0?1/(1+Math.sqrt(sum)):0
+            }
+            this.selectedUsers = others
+            res(others)
+        })
+        return prom
     }
+
+    similiarityByLiked(){
+        const prom = new Promise((res, rej)=>{
+            const user = this.user
+            let selectedUser
+            for(selectedUser of this.selectedUsers){
+                const user_tracks = user.likedTracks
+                const selectedUser_tracks = selectedUser.likedTracks
+                let user_track, selectedUser_track
+                for(user_track of user_tracks){
+                    for(selectedUser_track of selectedUser_tracks){
+                        if(user_track.sid === selectedUser_track.sid){
+                            selectedUser.score += 1
+                        }
+                    }
+                }
+            }
+            res("done")
+        })
+        return prom
+    }
+
+    getSimilarUsers(k){
+        const similarUsers = this.selectedUsers
+        return similarUsers
+    }
+
+    
+
+                                                                      
 
     #sort(data)
     {

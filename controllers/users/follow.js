@@ -45,7 +45,7 @@ export const follow = async (req, res) => {
     const task2 = db.collection("users").findOneAndUpdate({uid: uid}, {
         $push: {
             "public.profile.followers": {
-                uid: uid,
+                uid: cuid,
                 followerdAt: {
                     format: moment().format(),
                     date: moment().format("MMM Do YY") 
