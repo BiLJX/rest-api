@@ -8,7 +8,6 @@ import "./firebase.js"
 import bodyParser from "body-parser"
 import {router as resultRoute} from "./Routes/result.js"
 import {router as listen} from "./Routes/listen.js"
-import {router as upload} from "./Routes/upload.js"
 import {router as notifications} from "./Routes/notification.js"
 import {router as tracks} from "./Routes/tracks.js"
 import {router as home} from "./Routes/home.js"
@@ -103,17 +102,22 @@ app.get("/isLoggedIn", (req, res)=>{
 // })
 
 app.use("*", (req, res, next)=>{
-	const token = req.cookies.session||"";
-	admin.auth().verifySessionCookie(token, true)
-	.then((decodedToken)=>{
-		app.uid = decodedToken.uid
-		next()
-	})
-	.catch((err)=>console.log(err))
+	const token = req.cookies.session||false;
+	if(token){
+		admin.auth().verifySessionCookie(token, true)
+		.then((decodedToken)=>{
+			app.uid = decodedToken.uid
+			next()
+		}).catch((err)=>res.send("error"))
+	}else{
+		res.send("error")
+	}
+	
+	
 })
 
 app.get("/api/userId", (req, res)=>{
-	res.send({"uid": app.uid})
+	app.uid?res.send({"uid": app.uid}):res.status(401).json({message: "Un Authenticated"})
 })
 
 
@@ -121,7 +125,6 @@ app.get("/api/userId", (req, res)=>{
 
 
 app.use("/api/music", tracks)
-app.use("/api/music/upload", upload)
 app.use("/api/home/result", resultRoute)
 app.use("/api/home", home)
 app.use("/api/u", user)

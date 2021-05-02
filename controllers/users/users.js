@@ -1,7 +1,7 @@
 
 import {putInfo} from "../../Modules/putInfo.js"
 import {follow} from "./follow.js"
- 
+ import {uploadMusic} from "./uploadMusic.js"
 
 export async function getUser(req, res){
     const {u} = req.params
@@ -27,14 +27,19 @@ export async function getUser(req, res){
 }
 
 export const getLiked = async (req, res) => {
-    const db = req.app.db;
-    const likedSongs_uid = await db.collection("liked").findOne({uid: req.app.uid})
-    const likedSongs = Promise.all(likedSongs_uid.tracks?.map(track=>{
-        return db.collection("tracks").findOne({sid: track.sid})
-     }))
-    const final = await likedSongs 
-    res.send(putInfo(final))
+    try{
+        const db = req.app.db;
+        const likedSongs_uid = await db.collection("liked").findOne({uid: req.app.uid})
+        const likedSongs = Promise.all(likedSongs_uid.tracks?.map(track=>{
+            return db.collection("tracks").findOne({sid: track.sid})
+         }))
+        const final = await likedSongs 
+        res.send(putInfo(final))
+    }catch{
+        res.status(401).json({message: "error"})
+    }
+
 }
 
 export {follow}
-
+export {uploadMusic}

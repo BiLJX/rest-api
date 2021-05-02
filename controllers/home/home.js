@@ -8,15 +8,28 @@ const sort = new Sort
 
 
 export const getPopular = async (req, res) => {
-    const db = req.app.db
-	const data = await db.collection("tracks").find({}).toArray()
-    res.send(putInfo(sort.popular(data), req.app.uid, db))
+	try{
+		if(!req.app.uid){
+			res.status(401).json({msg: "err"})
+		}
+		const db = req.app.db
+		const data = await db.collection("tracks").find({}).toArray()
+		res.send(putInfo(sort.popular(data), req.app.uid, db))
+	}catch{
+		res.send("error")
+	}
+    
 }
 
 export const getTrending = async (req, res) => {
-    const db = req.app.db
-	const data = await db.collection("tracks").find({}).toArray()
-	res.send(putInfo(sort.trending(data), req.app.uid, db))
+	try{
+		const db = req.app.db
+		const data = await db.collection("tracks").find({}).toArray()
+		res.send(putInfo(sort.trending(data), req.app.uid, db))
+	}catch{
+		res.send("error")
+	}
+    
 }
 
 
