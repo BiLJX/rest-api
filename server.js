@@ -108,9 +108,9 @@ app.use("*", (req, res, next)=>{
 		.then((decodedToken)=>{
 			app.uid = decodedToken.uid
 			next()
-		}).catch((err)=>res.send("error"))
+		}).catch((err)=>console.log("error"))
 	}else{
-		res.send("error")
+		console.log("error")
 	}
 	
 	
