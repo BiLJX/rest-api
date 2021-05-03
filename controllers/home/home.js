@@ -14,7 +14,7 @@ export const getPopular = async (req, res) => {
 		}
 		const db = req.app.db
 		const data = await db.collection("tracks").find({}).toArray()
-		res.send(putInfo(sort.popular(data), req.app.uid, db))
+		res.send(await putInfo(sort.popular(data), req.app.uid, db))
 	}catch{
 		res.send("error")
 	}
@@ -25,7 +25,7 @@ export const getTrending = async (req, res) => {
 	try{
 		const db = req.app.db
 		const data = await db.collection("tracks").find({}).toArray()
-		res.send(putInfo(sort.trending(data), req.app.uid, db))
+		res.send(await putInfo(sort.trending(data), req.app.uid, db))
 	}catch{
 		res.send("error")
 	}
@@ -53,7 +53,7 @@ export const getRecommended = async (req, res) => {
     const uid = req.app.uid
 	const reco = new Recomend(uid, db)
 	const tracks = await reco.getRecommendation()
-	const data_withInfo = putInfo(tracks, uid, db)
+	const data_withInfo = await putInfo(tracks, uid, db)
 	const rawData = data_withInfo.filter(data=>!data.hasLiked)
 	const data = uniq_fast(rawData)
 	res.send(data)
@@ -64,7 +64,7 @@ export const getRecommendedByfollowing = async (req, res) => {
     const db = req.app.db
 	const interaction = new Interaction(req.app.uid, db)
 	const tracks = await interaction.getTracks()
-	const rawData = putInfo(tracks, uid, db)
+	const rawData = await putInfo(tracks, uid, db)
 	const data = rawData.filter(data=>!data.hasLiked)
 	res.send(uniq_fast(data))
 }

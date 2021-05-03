@@ -17,20 +17,12 @@ function getPfp(uid)
     return pfp
 }
 
-function getAllM(uid, database)
+async function getAll(uid, database)
 {
     const db = database
-    let all;
-    db.collection("users").findOne({uid: uid}, (err, result)=>all = result.public.profile)
-    return all
+    const all = await db.collection("users").findOne({uid: uid})
+    return all.public.profile
 }
 
-function getAll(uid)
-{
-    const db = admin.database().ref("users/"+uid+"/public/profile/")
-    let all;
-    db.on("value", snapshot=>{all=snapshot.val();})
-    return all
-}
 
-export {getUserName, getPfp, getAll, getAllM}
+export {getUserName, getPfp, getAll}
