@@ -12,7 +12,7 @@ export async function getUser(req, res){
     try{
         const tracks = await db.collection("tracks").find(query).toArray()
         const user = await db.collection("users").findOne(query)
-        user.tracks = putInfo(tracks, req.app.uid)
+        user.tracks = await putInfo(tracks, req.app.uid, db)
         const hasFollowed = await db.collection("users").findOne({uid: req.app.uid, "public.profile.following":{$elemMatch: {uid: u}}})
         if(hasFollowed !== null){
             user.isFollowing = true
@@ -33,8 +33,8 @@ export const getLiked = async (req, res) => {
         const likedSongs = Promise.all(likedSongs_uid.tracks?.map(track=>{
             return db.collection("tracks").findOne({sid: track.sid})
          }))
-        const final = await likedSongs 
-        res.send(putInfo(final))
+        const final = await likedSongs
+        res.send(await putInfo(final, req.app.uid, db))
     }catch{
         res.status(401).json({message: "error"})
     }
