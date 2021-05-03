@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
             }
           ]
     ).toArray()
-	res.send(putInfo(result))
+	res.send(putInfo(result, req.app.uid, db))
 })
 
 export {router}
