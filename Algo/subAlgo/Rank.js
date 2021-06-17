@@ -19,26 +19,28 @@ class Rank
 
     async start()
     {
-        
+        const tracks = []
         for(let user of this.users){
-            await this.setTracks(user.uid)
+            tracks.push(user.likedTracks)
         }
+        await this.setTracks(tracks.flat())
         return "done"
     }
 
-    async setTracks(uid){
+    async setTracks(tracks){
         const db = this.db
-        const likedTracks = await db.collection("liked").findOne({uid: uid})
-        for(let track of likedTracks.tracks){
-            this.tracks.push(await this.findSongs(track.sid))
-        }
+        this.tracks = await this.findSongs(tracks)
+        // const likedTracks = await db.collection("liked").findOne({uid: uids})
+        // for(let track of likedTracks.tracks){
+        //     this.tracks.push(await this.findSongs(track.sid))
+        // }
     }
 
     // async setTracksFollowers(uid, follow)
 
-    async findSongs(sid){
+    async findSongs(sids){
         const db = this.db;
-        const tracks = await db.collection("tracks").findOne({sid: sid})
+        const tracks = await db.collection("tracks").find({sid: {$in: sids}}).toArray()
         return tracks
     }
 

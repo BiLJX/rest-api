@@ -66,7 +66,8 @@ async function upload_info(data)
         "likedBy":[],
         "commentedBy": [],
         "date":{
-            "fulldata": moment().format("MMM Do YY"),
+            formated_date: moment().format(),
+            "fulldate": moment().format("MMM Do YY"),
             "totalDate": dayFunc(day, month, year)
         }
     }

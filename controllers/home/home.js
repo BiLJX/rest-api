@@ -8,25 +8,28 @@ const sort = new Sort
 
 
 export const getPopular = async (req, res) => {
+	const start = req.query["start"]
+	const end = req.query["end"]
 	try{
-		if(!req.app.uid){
-			res.status(401).json({msg: "err"})
-		}
 		const db = req.app.db
-		const data = await db.collection("tracks").find({}).toArray()
-		res.send(await putInfo(sort.popular(data), req.app.uid, db))
-	}catch{
+		const data = sort.popular(await db.collection("tracks").find({}).toArray()) 
+		res.send(await putInfo(data.slice(start, end), req.app.uid, db))
+	}catch(err){
+		console.log(err)
 		res.send("error")
 	}
     
 }
 
 export const getTrending = async (req, res) => {
+	const start = req.query["start"]
+	const end = req.query["end"]
 	try{
 		const db = req.app.db
-		const data = await db.collection("tracks").find({}).toArray()
-		res.send(await putInfo(sort.trending(data), req.app.uid, db))
-	}catch{
+		const data = sort.trending(await db.collection("tracks").find({}).toArray()) 
+		res.send(await putInfo(data.slice(start, end), req.app.uid, db))
+	}catch(err){
+		console.log(err)
 		res.send("error")
 	}
     
@@ -49,6 +52,8 @@ function uniq_fast(a) {
 }
 
 export const getRecommended = async (req, res) => {
+	const start = req.query["start"]
+	const end = req.query["end"]
     const db = req.app.db
     const uid = req.app.uid
 	const reco = new Recomend(uid, db)
@@ -56,7 +61,7 @@ export const getRecommended = async (req, res) => {
 	const data_withInfo = await putInfo(tracks, uid, db)
 	const rawData = data_withInfo.filter(data=>!data.hasLiked)
 	const data = uniq_fast(rawData)
-	res.send(data)
+	res.send(data.slice(start, end))
 }
 
 export const getRecommendedByfollowing = async (req, res) => {

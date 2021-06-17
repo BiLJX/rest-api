@@ -9,8 +9,10 @@ class Similarity
         this.db = db
     }
 
-    similiarityBygenre(genres_array)
+    similiarityBygenre()
     {
+        const genres_array =  Object.keys(this.user.tracker.byLiked.genre) 
+        
         const prom = new Promise((res, rej)=>{
             const others = this.selectedUsers
             const genres = genres_array
@@ -18,8 +20,8 @@ class Similarity
             for(let i = 0; i<others.length; i++){
                 let sum = 0
                 for(let j = 0; j<genres.length; j++){
-                    const other_genre = others[i].byLiked.genre[genres[j]];
-                    const user_genre = user.byLiked.genre[genres[j]];
+                    const other_genre = others[i]?.tracker?.byLiked.genre[genres[j]];
+                    const user_genre = user.tracker?.byLiked.genre[genres[j]];
                     if(other_genre){
                         //KNN
                         const squared = (other_genre-user_genre)*(other_genre-user_genre);
@@ -37,8 +39,11 @@ class Similarity
     similiarityByLiked(){
         const prom = new Promise((res, rej)=>{
             const user = this.user
-            let selectedUser
+            let selectedUser;
             for(selectedUser of this.selectedUsers){
+                
+                if(!selectedUser.likedTracks) return
+                console.log(selectedUser.likedTracks)
                 const user_tracks = user.likedTracks
                 const selectedUser_tracks = selectedUser.likedTracks
                 let user_track, selectedUser_track

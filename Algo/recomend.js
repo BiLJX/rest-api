@@ -16,9 +16,9 @@ class Recomend
     {
         this.recomendedTracks = []
         const db = this.db
-        const [genres, selectedUser, user] = await Promise.all([ this.getUserGenre(), this.getOthersData(), this.getUserData() ])
+        const [selectedUser, user] = await Promise.all([this.getOthersData(), this.getUserData() ])
         const sim = new Similarity(selectedUser, user, db)
-        await sim.similiarityBygenre(genres)
+        await sim.similiarityBygenre()
         await sim.similiarityByLiked()
         const similar_users = sim.getSimilarUsers()
         const rank = new Rank(similar_users, db)
@@ -29,23 +29,10 @@ class Recomend
     
 
     //gets what genre like the most
-    async getUserGenre() {
-        const db = this.db;
-        const tracker = await db.collection("tracker").findOne({uid: this.uid});
-        const genre = Object.keys(tracker.byLiked.genre);
-        return genre;
-    }
 
     async getUserData(){
         const db = this.db;
-        const user = await db.collection("tracker").findOne({uid: this.uid})
-        const likedSongs = await db.collection("liked").findOne(
-            {
-                uid: this.uid,
-            }
-        )
-    
-        user.likedTracks = likedSongs.tracks
+        const user = await db.collection("users").findOne({uid: this.uid})
         user.score = 0
         return user
     }
@@ -53,19 +40,16 @@ class Recomend
 
     async getOthersData(){
         const db = this.db;
-        const tracker = await db.collection("tracker").find({
+        
+        console.time("others")
+        const users = await db.collection("users").find({
             uid: {$ne: this.uid}
         }).toArray()
-        const lentgth  = tracker.length;
-        let i;
-        for(i = 0; i<lentgth; i++){
-            const likedTracks = await db.collection("liked").findOne({
-                uid: tracker[i].uid, 
-            })
-            tracker[i].score = 0
-            tracker[i].likedTracks = likedTracks.tracks
+        console.timeEnd("others")
+        for(let user of users){
+            user.score = 0
         }
-        return tracker
+        return users
     }
 
 

@@ -11,9 +11,14 @@ export async function getUser(req, res){
 	}
     try{
         const tracks = await db.collection("tracks").find(query).toArray()
-        const user = await db.collection("users").findOne(query)
+        const user = await db.collection("users").findOne(query, {
+            projection: {
+                profile: 1,
+                _id: 0
+            }
+        })
         user.tracks = await putInfo(tracks, req.app.uid, db)
-        const hasFollowed = await db.collection("users").findOne({uid: req.app.uid, "public.profile.following":{$elemMatch: {uid: u}}})
+        const hasFollowed = await db.collection("users").findOne({uid: req.app.uid, "profile.following":{$elemMatch: {$in: [u]}}})
         if(hasFollowed !== null){
             user.isFollowing = true
         }else{
@@ -29,13 +34,12 @@ export async function getUser(req, res){
 export const getLiked = async (req, res) => {
     try{
         const db = req.app.db;
-        const likedSongs_uid = await db.collection("liked").findOne({uid: req.app.uid})
-        const likedSongs = Promise.all(likedSongs_uid.tracks?.map(track=>{
-            return db.collection("tracks").findOne({sid: track.sid})
-         }))
-        const final = await likedSongs
+        const user = await db.collection("users").findOne({uid: req.query.uid||req.app.uid})
+        const liked_datas = user.likedTracks
+        const final = await db.collection("tracks").find({sid: {$in: liked_datas}}).toArray()
         res.send(await putInfo(final, req.app.uid, db))
-    }catch{
+    }catch(err){
+        console.log(err)
         res.status(401).json({message: "error"})
     }
 

@@ -17,9 +17,8 @@ class Interaction
     }
     async #getSimilarUsers(selected_user, user)
     {
-        const genres = await this.#getUserGenre()
         const sim = new Similarity(selected_user, user)
-        await sim.similiarityBygenre(genres)
+        await sim.similiarityBygenre()
         await sim.similiarityByLiked()
         return sim.getSimilarUsers()
     }
@@ -27,67 +26,43 @@ class Interaction
     {
         const db = this.db
         const user = await db.collection("users").findOne({uid: this.uid})
-        return user.public.profile.following
+        return user.profile.following
     }
 
     async #getUserTracker()
     {
         const db = this.db;
-        const user = await db.collection("tracker").findOne({uid: this.uid})
-        const likedSongs = await db.collection("liked").findOne(
-            {
-                uid: this.uid,
-            }
-        )
-        user.likedTracks = likedSongs.tracks
+        const user = await db.collection("users").findOne({uid: this.uid})
         user.score = 0
         return user
     }
 
-    async #getUserGenre() {
-        const db = this.db;
-        const tracker = await db.collection("tracker").findOne({uid: this.uid});
-        const genre = Object.keys(tracker.byLiked.genre);
-        return genre;
-    }          
 
     async #getUserFollowingData()
     {
-        const data = []
         const userFollowing = await this.#getUserFollowing()
-        let user;
-        for(user of userFollowing){
-            const userData = await this.#getFollowersData(user.uid)
-            data.push(userData)
-        }
+        const data = await this.#getFollowersData(userFollowing)
         return data.flat()
     }
 
-    async #getFollowersData(uid){
+    async #getFollowersData(uids){
         const db = this.db;
-        const user = await db.collection("users").findOne({uid: uid})
-        const followers = user.public.profile.followers
-        const followersData = []
-        let follower;
-        for(follower of followers){
-            const follower_tracker = await this.#getUserTrackerByiD(follower.uid)
-            followersData.push(follower_tracker)
+        const users = await db.collection("users").find({uid: {$in: uids}}).toArray()
+        const followersRaw = []
+        for(let user of users){
+            user.score = 0
+            followersRaw.push(user.profile.followers)
         }
+        const followers = followersRaw.flat()
+        const followersData = await this.#getUserTrackerByiD(followers)
         return followersData
     }
     
-    async #getUserTrackerByiD(uid)
+    async #getUserTrackerByiD(uids)
     {
-       const db = this.db;
-       const user = await db.collection("tracker").findOne({uid: uid})
-        const likedSongs = await db.collection("liked").findOne(
-            {
-                uid: this.uid,
-            }
-        )
-        user.likedTracks = likedSongs.tracks
-        user.score = 0
-        return user
+        const db = this.db;
+        const users = await db.collection("users").find({uid: {$in: uids}}).toArray()
+        return users
     }
     // #newSong(song){
     //     const user_data = this.#getUserData()

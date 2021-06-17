@@ -7,20 +7,16 @@ export const follow = async (req, res) => {
     const db = req.app.db
     const cuid = req.app.uid
     const uid = req.body.uid
-    const hasFollowed = await db.collection("users").findOne({uid: cuid, "public.profile.following":{$elemMatch: {uid: uid}}})
+    const hasFollowed = await db.collection("users").findOne({uid: cuid, "profile.following":{$elemMatch: {$in: [uid]}}})
     if(hasFollowed !== null){
         const task1 = db.collection("users").findOneAndUpdate({uid: cuid} ,{
             $pull: {
-                "public.profile.following": {
-                    uid: uid
-                }
+                "profile.following": uid
             }
         })
         const task2 = db.collection("users").findOneAndUpdate({uid: uid}, {
             $pull: {
-                "public.profile.followers": {
-                    uid: uid
-                }
+                "profile.followers": cuid
             }
         })
         try{
@@ -33,24 +29,12 @@ export const follow = async (req, res) => {
     }
     const task1 = db.collection("users").findOneAndUpdate({uid: cuid} ,{
         $push: {
-            "public.profile.following": {
-                uid: uid,
-                followedAt: {
-                    format: moment().format(),
-                    date: moment().format("MMM Do YY") 
-                }
-            }
+            "profile.following": uid
         }
     })
     const task2 = db.collection("users").findOneAndUpdate({uid: uid}, {
         $push: {
-            "public.profile.followers": {
-                uid: cuid,
-                followerdAt: {
-                    format: moment().format(),
-                    date: moment().format("MMM Do YY") 
-                }
-            }
+            "profile.followers": cuid
         }
     })
     try{
@@ -59,6 +43,4 @@ export const follow = async (req, res) => {
     }catch{
         res.status(401).json("error")
     }
-  
- 
 }
